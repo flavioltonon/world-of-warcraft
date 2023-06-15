@@ -1,4 +1,4 @@
-module worldofwarcraft
+module github.com/flavioltonon/world-of-warcraft
 
 go 1.20
 

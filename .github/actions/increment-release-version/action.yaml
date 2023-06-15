@@ -1,0 +1,67 @@
+name: Increment release version
+outputs:
+  next_version:
+    description: The incremented release version
+    value: ${{ steps.increment-release-version.outputs.next }}
+  changelog:
+    description: Changelog of the changes between the current and the next versions
+    value: ${{ steps.generate-changelog.outputs.changelog }}
+runs:
+  using: composite
+  steps:
+    - name: Check out repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Get latest release
+      id: get-latest-release
+      uses: pozetroninc/github-action-get-latest-release@v0.7.0
+      with:
+        repository: ${{ github.repository }}
+        token: ${{ github.token }}
+
+    - name: Increment release version
+      id: increment-release-version
+      uses: ietf-tools/semver-action@v1
+      with:
+        token: ${{ github.token }}
+        branch: main
+        patchList: "fix, chore, perf, refactor, test, tests"
+
+    - name: Generate changelog
+      id: generate-changelog
+      uses: mikepenz/release-changelog-builder-action@v3.7.0
+      with:
+        configurationJson: |
+          {
+            "template": "# Changelog\n\n#{{CHANGELOG}}",
+            "categories": [
+              {
+                "title": "## 🚀 Features",
+                "labels": ["feature"]
+              },
+              {
+                "title": "## 🐛 Fixes",
+                "labels": ["fix"]
+              },
+              {
+                "title": "## 🧪 Tests",
+                "labels": ["test", "tests"]
+              },
+              {
+                "title": "## 💬 Others",
+                "labels": ["chore", "documentation"]
+              }
+            ],
+            "sort": {
+              "order": "DESC",
+              "on_property": "mergedAt"
+            },
+            "max_pull_requests": 1000,
+            "max_back_track_time_days": 365,
+            "base_branches": ["main"]
+          }
+        fromTag: ${{ steps.get-latest-release.outputs.release }}
+        toTag: ${{ github.sha }}
+        token: ${{ github.token }}

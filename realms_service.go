@@ -9,6 +9,10 @@ import (
 
 type RealmsService service
 
+func (s *RealmsService) Namespace() Namespace {
+	return NewStaticNamespace(s.options.region)
+}
+
 func (s *RealmsService) getRealmBySlugEndpoint(realmSlug string) string {
 	return fmt.Sprintf("%s/data/wow/realm/%s?locale=%s", s.options.apiURL, realmSlug, s.options.locale)
 }
@@ -18,6 +22,8 @@ func (s *RealmsService) GetRealmBySlug(realmSlug string) (*Realm, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
+
+	request.Header.Set("Battlenet-Namespace", s.Namespace().String())
 
 	response, err := s.httpClient.Do(request)
 	if err != nil {

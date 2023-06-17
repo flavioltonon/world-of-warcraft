@@ -12,11 +12,13 @@ func (s *AuctionHouseService) listAuctionsEndpoint(realmID int) string {
 	return fmt.Sprintf("%s/data/wow/connected-realm/%d/auctions?locale=%s", s.options.apiURL, realmID, s.options.locale)
 }
 
-func (s *AuctionHouseService) ListAuctions(realmID int) ([]*Auction, error) {
+func (s *AuctionHouseService) ListAuctions(realmID int, namespace Namespace) ([]*Auction, error) {
 	request, err := http.NewRequest(http.MethodGet, s.listAuctionsEndpoint(realmID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
+
+	request.Header.Set("Battlenet-Namespace", namespace.String())
 
 	response, err := s.httpClient.Do(request)
 	if err != nil {

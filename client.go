@@ -27,7 +27,6 @@ func NewClient(credentials Credentials, optionFuncs ...ClientOptionFunc) (*Clien
 	client.common = &service{
 		httpClient: &http.Client{
 			Transport: &roundTripper{
-				namespace:   options.namespace,
 				accessToken: token.AccessToken,
 			},
 		},
@@ -41,13 +40,11 @@ func NewClient(credentials Credentials, optionFuncs ...ClientOptionFunc) (*Clien
 
 // roundTripper is a custom RoundTripper for http.Clients
 type roundTripper struct {
-	namespace   string
 	accessToken string
 }
 
 // RoundTrip sets recurring headers before making a request, also implementing RoundTripper interface
 func (t *roundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
-	request.Header.Set("Battlenet-Namespace", t.namespace)
 	request.Header.Set("Authorization", "Bearer "+t.accessToken)
 	request.Header.Set("Content-Type", "application/json")
 	return http.DefaultTransport.RoundTrip(request)

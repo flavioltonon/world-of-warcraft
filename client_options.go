@@ -8,15 +8,15 @@ type ClientOptions struct {
 	// ref: https://develop.battle.net/documentation/world-of-warcraft/guides/localization
 	locale string
 
-	// ref: https://develop.battle.net/documentation/world-of-warcraft/guides/namespaces
-	namespace string
+	// ref: https://develop.battle.net/documentation/guides/regionality-and-apis
+	region Region
 }
 
 func defaultClientOptions() ClientOptions {
 	return ClientOptions{
-		apiURL:    "https://us.api.blizzard.com",
-		locale:    "en_US",
-		namespace: "dynamic-us",
+		apiURL: "https://us.api.blizzard.com",
+		locale: "en_US",
+		region: US_Region,
 	}
 }
 
@@ -35,7 +35,7 @@ func WithLocale(locale string) ClientOptionFunc {
 	return func(options *ClientOptions) { options.locale = locale }
 }
 
-// WithNamespace sets the Client with a custom namespace
-func WithNamespace(namespace string) ClientOptionFunc {
-	return func(options *ClientOptions) { options.namespace = namespace }
+// WithRegion sets the Client with a custom region
+func WithRegion(region Region) ClientOptionFunc {
+	return func(options *ClientOptions) { options.region = region }
 }

@@ -1,6 +1,9 @@
 package worldofwarcraft
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Namespace string
 
@@ -9,9 +12,13 @@ func (n Namespace) String() string {
 }
 
 func NewStaticNamespace(region Region) Namespace {
-	return Namespace(fmt.Sprintf("static_%s", region))
+	return newNamespace("static", region.String())
 }
 
 func NewDynamicNamespace(region Region) Namespace {
-	return Namespace(fmt.Sprintf("dynamic_%s", region))
+	return newNamespace("dynamic", region.String())
+}
+
+func newNamespace(prefix string, region string) Namespace {
+	return Namespace(fmt.Sprintf("%s_%s", prefix, strings.ToLower(region)))
 }

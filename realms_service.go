@@ -10,7 +10,7 @@ import (
 type RealmsService service
 
 func (s *RealmsService) Namespace() Namespace {
-	return NewStaticNamespace(s.options.region)
+	return NewDynamicNamespace(s.options.region)
 }
 
 func (s *RealmsService) getRealmBySlugEndpoint(realmSlug string) string {

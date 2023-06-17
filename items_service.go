@@ -13,11 +13,11 @@ func (s *ItemsService) Namespace() Namespace {
 	return NewStaticNamespace(s.options.region)
 }
 
-func (s *ItemsService) getItemByIDEndpoint(itemID string) string {
-	return fmt.Sprintf("%s/data/wow/realm/%s?locale=%s", s.options.apiURL, itemID, s.options.locale)
+func (s *ItemsService) getItemByIDEndpoint(itemID int) string {
+	return fmt.Sprintf("%s/data/wow/item/%d?locale=%s", s.options.apiURL, itemID, s.options.locale)
 }
 
-func (s *ItemsService) GetItemByID(itemID string) (*Item, error) {
+func (s *ItemsService) GetItemByID(itemID int) (*Item, error) {
 	request, err := http.NewRequest(http.MethodGet, s.getItemByIDEndpoint(itemID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)

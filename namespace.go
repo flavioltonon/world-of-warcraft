@@ -12,13 +12,13 @@ func (n Namespace) String() string {
 }
 
 func NewStaticNamespace(region Region) Namespace {
-	return newNamespace("static", region.String())
+	return newNamespace("static", region)
 }
 
 func NewDynamicNamespace(region Region) Namespace {
-	return newNamespace("dynamic", region.String())
+	return newNamespace("dynamic", region)
 }
 
-func newNamespace(prefix string, region string) Namespace {
-	return Namespace(fmt.Sprintf("%s_%s", prefix, strings.ToLower(region)))
+func newNamespace(prefix string, region Region) Namespace {
+	return Namespace(fmt.Sprintf("%s-%s", prefix, strings.ToLower(region.String())))
 }

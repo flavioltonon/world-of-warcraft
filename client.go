@@ -7,6 +7,7 @@ type Client struct {
 	common *service
 
 	AuctionHouse *AuctionHouseService
+	Items        *ItemsService
 	Realms       *RealmsService
 }
 
@@ -34,6 +35,7 @@ func NewClient(credentials Credentials, optionFuncs ...ClientOptionFunc) (*Clien
 		token:   token,
 	}
 	client.AuctionHouse = (*AuctionHouseService)(client.common)
+	client.Items = (*ItemsService)(client.common)
 	client.Realms = (*RealmsService)(client.common)
 	return client, nil
 }

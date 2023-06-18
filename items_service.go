@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type ItemsService service
@@ -43,4 +46,42 @@ func (s *ItemsService) GetItemByID(itemID int) (*Item, error) {
 	}
 
 	return &body, nil
+}
+
+func (s *ItemsService) ListItemsByIDs(itemsIDs []int) ([]*Item, error) {
+	var (
+		g         errgroup.Group
+		rwm       sync.RWMutex
+		semaphore = make(chan struct{}, 100)
+	)
+
+	items := make([]*Item, 0, len(itemsIDs))
+
+	for i := range itemsIDs {
+		semaphore <- struct{}{}
+
+		itemID := itemsIDs[i]
+
+		g.Go(func() error {
+			defer func() {
+				<-semaphore
+			}()
+
+			item, err := s.GetItemByID(itemID)
+			if err != nil {
+				return err
+			}
+
+			rwm.Lock()
+			items = append(items, item)
+			rwm.Unlock()
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }

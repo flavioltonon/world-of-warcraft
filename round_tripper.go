@@ -16,7 +16,7 @@ type roundTripper struct {
 func newRoundTripper(token *token) *roundTripper {
 	return &roundTripper{
 		accessToken: token.AccessToken,
-		rateLimiter: rate.NewLimiter(rate.Every(1*time.Second), 100),
+		rateLimiter: rate.NewLimiter(rate.Every(10*time.Millisecond), 1),
 	}
 }
 

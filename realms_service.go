@@ -25,7 +25,7 @@ func (s *RealmsService) GetRealmBySlug(ctx context.Context, realmSlug string) (*
 		return nil, fmt.Errorf("failed to get GetRealmBySlug endpoint: %w", err)
 	}
 
-	request, err := http.NewRequest(http.MethodGet, endpoint.String(), nil)
+	request, err := s.client.NewRequest(http.MethodGet, endpoint.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}

@@ -20,7 +20,7 @@ func (s *AuctionHouseService) ListAuctions(ctx context.Context, realmID int, nam
 		return nil, fmt.Errorf("failed to get ListAuctions endpoint: %w", err)
 	}
 
-	request, err := http.NewRequest(http.MethodGet, endpoint.String(), nil)
+	request, err := s.client.NewRequest(http.MethodGet, endpoint.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}

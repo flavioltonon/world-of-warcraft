@@ -1,9 +1,5 @@
 package worldofwarcraft
 
-import "net/http"
-
 type service struct {
-	httpClient *http.Client
-	options    ClientOptions
-	token      *token
+	client *Client
 }

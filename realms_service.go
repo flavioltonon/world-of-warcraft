@@ -1,31 +1,38 @@
 package worldofwarcraft
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type RealmsService service
 
 func (s *RealmsService) Namespace() Namespace {
-	return NewDynamicNamespace(s.options.region)
+	return NewDynamicNamespace(s.client.region)
 }
 
-func (s *RealmsService) getRealmBySlugEndpoint(realmSlug string) string {
-	return fmt.Sprintf("%s/data/wow/realm/%s?locale=%s", s.options.apiURL, realmSlug, s.options.locale)
+func (s *RealmsService) getGetRealmBySlugEndpoint(realmSlug string) (*url.URL, error) {
+	return s.client.apiURL.Parse(fmt.Sprintf("/data/wow/realm/%s?locale=%s", realmSlug, s.client.locale))
 }
 
-func (s *RealmsService) GetRealmBySlug(realmSlug string) (*Realm, error) {
-	request, err := http.NewRequest(http.MethodGet, s.getRealmBySlugEndpoint(realmSlug), nil)
+func (s *RealmsService) GetRealmBySlug(ctx context.Context, realmSlug string) (*Realm, error) {
+	endpoint, err := s.getGetRealmBySlugEndpoint(realmSlug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get GetRealmBySlug endpoint: %w", err)
+	}
+
+	request, err := http.NewRequest(http.MethodGet, endpoint.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 
 	request.Header.Set("Battlenet-Namespace", s.Namespace().String())
 
-	response, err := s.httpClient.Do(request)
+	response, err := s.client.Do(ctx, request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to do request: %v", err)
 	}

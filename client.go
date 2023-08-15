@@ -1,39 +1,88 @@
 package worldofwarcraft
 
-import "net/http"
+import (
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+
+	"golang.org/x/time/rate"
+)
 
 // Client is a client for World of Warcraft APIs
 type Client struct {
-	common *service
+	apiURL        *url.URL
+	credentials   *Credentials
+	httpClient    *http.Client
+	oauthTokenURL *url.URL
+	rateLimiter   *rate.Limiter
 
-	AuctionHouse *AuctionHouseService
-	Items        *ItemsService
-	Realms       *RealmsService
+	locale Locale
+	region Region
+
+	common service
+
+	Authentication *AuthenticationService
+	AuctionHouse   *AuctionHouseService
+	Items          *ItemsService
+	Realms         *RealmsService
 }
 
-// NewClient creates a new Client
-func NewClient(credentials Credentials, optionFuncs ...ClientOptionFunc) (*Client, error) {
-	token, err := getToken(credentials)
-	if err != nil {
-		return nil, err
-	}
+const _BlizzardAPIMaxRequestsPerSecond = 100
 
+// NewClient creates a new Client
+func NewClient(httpClient *http.Client, optionFuncs ...ClientOptionFunc) (*Client, error) {
 	options := defaultClientOptions()
 
 	for _, optionFunc := range optionFuncs {
 		optionFunc.apply(&options)
 	}
 
-	client := new(Client)
-	client.common = &service{
-		httpClient: &http.Client{
-			Transport: newRoundTripper(token),
-		},
-		options: options,
-		token:   token,
+	client := &Client{
+		apiURL:        options.apiURL,
+		credentials:   options.credentials,
+		httpClient:    httpClient,
+		locale:        options.locale,
+		oauthTokenURL: options.oauthTokenURL,
+		rateLimiter:   rate.NewLimiter(rate.Limit(_BlizzardAPIMaxRequestsPerSecond), 1),
+		region:        options.region,
 	}
-	client.AuctionHouse = (*AuctionHouseService)(client.common)
-	client.Items = (*ItemsService)(client.common)
-	client.Realms = (*RealmsService)(client.common)
+
+	client.common.client = client
+	client.AuctionHouse = (*AuctionHouseService)(&client.common)
+	client.Authentication = (*AuthenticationService)(&client.common)
+	client.Items = (*ItemsService)(&client.common)
+	client.Realms = (*RealmsService)(&client.common)
+
+	if err := client.Authentication.ValidateCredentials(client.credentials); err != nil {
+		return nil, fmt.Errorf("failed to validate credentials: %w", err)
+	}
+
 	return client, nil
+}
+
+func (c *Client) NewRequest(method string, url string, body io.Reader) (*http.Request, error) {
+	request, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := c.Authentication.GetToken(c.credentials)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+token.AccessToken)
+	request.Header.Set("Content-Type", "application/json")
+
+	return request, nil
+}
+
+func (c *Client) Do(ctx context.Context, request *http.Request) (*http.Response, error) {
+	if err := c.rateLimiter.Wait(ctx); err != nil {
+		return nil, err
+	}
+
+	return c.httpClient.Do(request)
 }
